@@ -1,4 +1,5 @@
 .env
+kalshi_private.pem
 __pycache__/
 *.pyc
 *.pyo
