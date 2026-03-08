@@ -169,7 +169,7 @@ HTML = """<!DOCTYPE html>
 </head>
 <body>
 <header>
-  <h1>UFC Betting Predictor <span>ML predictions + Kalshi market odds · v11:21</span></h1>
+  <h1>UFC Betting Predictor <span>ML predictions + Kalshi market odds · v11:35</span></h1>
   <button id="refresh-btn" onclick="loadData()">Refresh</button>
 </header>
 <div id="status"></div>
