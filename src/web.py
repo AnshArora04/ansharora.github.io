@@ -59,16 +59,16 @@ HTML = """<!DOCTYPE html>
   }
   #refresh-btn:disabled { background: #555; cursor: not-allowed; }
   #status {
-    padding: 1rem 1.5rem;
-    font-size: 0.9rem;
-    color: #aaa;
-    min-height: 2.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.85rem;
+    color: #666;
+    min-height: 2.2rem;
   }
   #status.error { color: #ff6b6b; }
   .spinner {
     display: inline-block;
-    width: 14px; height: 14px;
-    border: 2px solid #555;
+    width: 13px; height: 13px;
+    border: 2px solid #333;
     border-top-color: #cc0000;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
@@ -76,188 +76,190 @@ HTML = """<!DOCTYPE html>
     vertical-align: middle;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  #results { padding: 0 0.5rem 2rem; }
-  .event-group { margin-bottom: 2rem; }
-  .event-title {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #888;
-    padding: 0.4rem 1rem;
-    background: #1a1a1a;
-    border-left: 3px solid #cc0000;
-    margin: 0.5rem 0;
-  }
+  #results { padding: 0 0.75rem 2rem; }
+
+  /* Fight card */
   .card {
-    background: #181818;
-    border: 1px solid #2a2a2a;
-    border-radius: 10px;
-    margin: 0.6rem 0.5rem;
+    background: #161616;
+    border: 1px solid #242424;
+    border-radius: 12px;
+    margin: 0.65rem 0;
     overflow: hidden;
   }
-  .card-top {
-    padding: 0.85rem 1rem 0.6rem;
+  .card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  .matchup { flex: 1; }
-  .fighter { font-size: 1rem; font-weight: 600; color: #fff; }
-  .vs { font-size: 0.7rem; color: #666; margin: 1px 0; }
-  .weight { font-size: 0.72rem; color: #777; margin-top: 4px; }
-  .badge {
-    display: inline-block;
-    padding: 0.3rem 0.7rem;
-    border-radius: 20px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    white-space: nowrap;
-    align-self: flex-start;
-  }
-  .badge-bet { background: #0d3d1a; color: #4caf50; border: 1px solid #2e7d32; }
-  .badge-pass { background: #3d3000; color: #ffc107; border: 1px solid #7d6000; }
-  .badge-nomarket { background: #222; color: #777; border: 1px solid #333; }
-  .card-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border-top: 1px solid #252525;
-  }
-  .stat {
-    padding: 0.55rem 0.5rem;
-    text-align: center;
-    border-right: 1px solid #252525;
-  }
-  .stat:last-child { border-right: none; }
-  .stat-label { font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
-  .stat-value { font-size: 0.95rem; font-weight: 600; margin-top: 2px; }
-  .winner-row {
-    padding: 0.5rem 1rem;
-    border-top: 1px solid #252525;
-    font-size: 0.82rem;
-    color: #aaa;
-    display: flex;
     align-items: center;
-    gap: 0.3rem;
+    padding: 0.45rem 1rem;
+    background: #1c1c1c;
+    border-bottom: 1px solid #242424;
   }
-  .winner-name { color: #fff; font-weight: 600; }
-  .edge-pos { color: #4caf50; }
-  .edge-neg { color: #f44336; }
-  .summary {
-    margin: 1rem;
-    padding: 0.85rem 1rem;
-    background: #0d1f0d;
-    border: 1px solid #1e4d1e;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    color: #81c784;
+  .event-name {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #666;
   }
-  .summary h3 { font-size: 0.9rem; margin-bottom: 0.4rem; color: #a5d6a7; }
-  .summary ul { padding-left: 1.1rem; }
-  .summary li { margin: 0.2rem 0; }
-  .note {
-    margin: 0 1rem;
+  .volume-tag {
+    font-size: 0.7rem;
+    color: #555;
+  }
+  .volume-tag span { color: #888; font-weight: 600; }
+
+  /* Odds section — two fighters side by side */
+  .odds-row {
+    display: flex;
+    align-items: stretch;
+  }
+  .fighter-col {
+    flex: 1;
+    padding: 0.85rem 1rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .fighter-col.right {
+    text-align: right;
+    border-left: 1px solid #1e1e1e;
+  }
+  .fighter-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .fighter-name.fav { color: #fff; }
+  .odds-pct {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .odds-pct.high { color: #ff4444; }
+  .odds-pct.low  { color: #777; }
+  .odds-label {
+    font-size: 0.65rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Odds bar */
+  .bar-wrap {
+    height: 4px;
+    background: #222;
+    display: flex;
+  }
+  .bar-f1 { background: #cc0000; transition: width 0.4s; }
+  .bar-f2 { background: #444; flex: 1; }
+
+  /* Bottom meta row */
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.45rem 1rem;
+    border-top: 1px solid #1e1e1e;
     font-size: 0.72rem;
     color: #555;
-    padding-bottom: 1rem;
   }
+  .pick { color: #aaa; }
+  .pick strong { color: #ddd; }
+  .weight-class { color: #444; }
+  .no-market { color: #444; font-style: italic; }
+
+  .note {
+    font-size: 0.7rem;
+    color: #3a3a3a;
+    text-align: center;
+    padding: 1rem 0 0.5rem;
+  }
+
   @media (min-width: 600px) {
-    #results { padding: 0 1rem 2rem; }
-    .card { margin: 0.6rem 0; }
+    #results { padding: 0 1.25rem 2rem; }
   }
 </style>
 </head>
 <body>
 <header>
-  <h1>UFC Betting Predictor <span>ML predictions + Kalshi market odds · v11:35</span></h1>
+  <h1>UFC Fight Odds <span>Kalshi market odds · v11:35</span></h1>
   <button id="refresh-btn" onclick="loadData()">Refresh</button>
 </header>
 <div id="status"></div>
 <div id="results"></div>
 
 <script>
-function fmt(v, asPercent=true) {
-  if (v === null || v === undefined) return '—';
-  if (asPercent) return (v * 100).toFixed(0) + '%';
-  return v;
+function pct(v) {
+  if (v === null || v === undefined) return null;
+  return Math.round(v * 100);
 }
-function edge(v) {
-  if (v === null || v === undefined) return '<span>—</span>';
-  const p = (v * 100).toFixed(0);
-  const cls = v >= 0 ? 'edge-pos' : 'edge-neg';
-  const sign = v >= 0 ? '+' : '';
-  return `<span class="${cls}">${sign}${p}%</span>`;
-}
-function badge(rec) {
-  if (rec && rec.startsWith('BET')) return `<span class="badge badge-bet">${rec}</span>`;
-  if (rec === 'PASS') return `<span class="badge badge-pass">PASS</span>`;
-  return `<span class="badge badge-nomarket">NO MARKET</span>`;
+function fmtVol(v) {
+  if (v === null || v === undefined) return null;
+  if (v >= 1000) return '$' + (v / 1000).toFixed(1) + 'k';
+  return '$' + Math.round(v);
 }
 
 function renderResults(data) {
   const container = document.getElementById('results');
   if (!data.results || data.results.length === 0) {
-    container.innerHTML = '<p style="padding:1rem;color:#888">No fights found.</p>';
+    container.innerHTML = '<p style="padding:1.5rem;color:#555;text-align:center">No fights found.</p>';
     return;
   }
 
-  // Group by event
-  const events = {};
-  for (const r of data.results) {
-    const ev = r.event || 'Upcoming';
-    if (!events[ev]) events[ev] = [];
-    events[ev].push(r);
-  }
-
-  const valueBets = data.results.filter(r => r.bet_recommendation && r.bet_recommendation.startsWith('BET'));
+  // Sort by Kalshi volume descending (most traded first), no-market fights at bottom
+  const sorted = [...data.results].sort((a, b) => {
+    const va = a.kalshi_volume ?? -1;
+    const vb = b.kalshi_volume ?? -1;
+    return vb - va;
+  });
 
   let html = '';
 
-  // Summary box
-  if (valueBets.length > 0) {
-    html += '<div class="summary"><h3>Value Bets Found (' + valueBets.length + ')</h3><ul>';
-    for (const vb of valueBets) {
-      const mProb = vb.bet_on === vb.fighter1 ? vb.model_f1_prob : vb.model_f2_prob;
-      const kProb = vb.bet_on === vb.fighter1 ? vb.kalshi_f1_prob : vb.kalshi_f2_prob;
-      html += `<li><strong>${vb.bet_on}</strong> — model ${fmt(mProb)}, market ${fmt(kProb)}, edge +${(vb.bet_edge*100).toFixed(1)}%</li>`;
-    }
-    html += '</ul></div>';
+  for (const r of sorted) {
+    const f1k = pct(r.kalshi_f1_prob);
+    const f2k = pct(r.kalshi_f2_prob);
+    const hasOdds = f1k !== null && f2k !== null;
+
+    // Determine favourite by Kalshi odds
+    const f1Fav = hasOdds && f1k >= f2k;
+    const f1PctClass = hasOdds ? (f1Fav ? 'high' : 'low') : 'low';
+    const f2PctClass = hasOdds ? (!f1Fav ? 'high' : 'low') : 'low';
+
+    const vol = fmtVol(r.kalshi_volume);
+    const barWidth = hasOdds ? f1k : 50;
+
+    const pick = r.predicted_winner && r.predicted_winner !== 'Unknown'
+      ? `<span class="pick">ML pick: <strong>${r.predicted_winner}</strong></span>`
+      : '';
+
+    html += `<div class="card">
+      <div class="card-header">
+        <span class="event-name">${r.event || 'Upcoming'}</span>
+        ${vol ? `<span class="volume-tag">Kalshi volume <span>${vol}</span></span>` : '<span class="volume-tag no-market">No market</span>'}
+      </div>
+      <div class="odds-row">
+        <div class="fighter-col left">
+          <div class="fighter-name">${r.fighter1}</div>
+          <div class="odds-pct ${f1PctClass}">${hasOdds ? f1k + '%' : '—'}</div>
+          <div class="odds-label">win prob</div>
+        </div>
+        <div class="fighter-col right">
+          <div class="fighter-name">${r.fighter2}</div>
+          <div class="odds-pct ${f2PctClass}">${hasOdds ? f2k + '%' : '—'}</div>
+          <div class="odds-label">win prob</div>
+        </div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-f1" style="width:${barWidth}%"></div>
+        <div class="bar-f2"></div>
+      </div>
+      <div class="meta-row">
+        ${pick}
+        <span class="weight-class">${r.weight_class || ''}</span>
+      </div>
+    </div>`;
   }
 
-  for (const [evName, fights] of Object.entries(events)) {
-    html += `<div class="event-group"><div class="event-title">${evName}</div>`;
-    for (const r of fights) {
-      const f1Win = r.predicted_winner === r.fighter1;
-      const modelPct = fmt(f1Win ? r.model_f1_prob : r.model_f2_prob);
-      const kalshiPct = fmt(f1Win ? r.kalshi_f1_prob : r.kalshi_f2_prob);
-      const edgeVal = f1Win ? r.f1_edge : r.f2_edge;
-
-      html += `<div class="card">
-        <div class="card-top">
-          <div class="matchup">
-            <div class="fighter">${r.fighter1}</div>
-            <div class="vs">vs.</div>
-            <div class="fighter">${r.fighter2}</div>
-            <div class="weight">${r.weight_class || ''}</div>
-          </div>
-          ${badge(r.bet_recommendation)}
-        </div>
-        <div class="winner-row">
-          Pick: <span class="winner-name">${r.predicted_winner}</span>
-          &nbsp;·&nbsp; conf ${fmt(r.confidence)} &nbsp;·&nbsp; edge ${edge(edgeVal)}
-        </div>
-        <div class="card-stats">
-          <div class="stat"><div class="stat-label">Model</div><div class="stat-value">${modelPct}</div></div>
-          <div class="stat"><div class="stat-label">Kalshi</div><div class="stat-value">${kalshiPct}</div></div>
-          <div class="stat"><div class="stat-label">F1 Prob</div><div class="stat-value">${fmt(r.model_f1_prob)}</div></div>
-          <div class="stat"><div class="stat-label">F2 Prob</div><div class="stat-value">${fmt(r.model_f2_prob)}</div></div>
-        </div>
-      </div>`;
-    }
-    html += '</div>';
-  }
-
-  html += '<p class="note">Model accuracy ~63%. For informational purposes only. Bet responsibly.</p>';
+  html += '<p class="note">Odds from Kalshi prediction markets. For informational purposes only.</p>';
   container.innerHTML = html;
 }
 
@@ -266,7 +268,7 @@ async function loadData() {
   const status = document.getElementById('status');
   btn.disabled = true;
   status.className = '';
-  status.innerHTML = '<span class="spinner"></span> Fetching fights & running model… (may take ~30s)';
+  status.innerHTML = '<span class="spinner"></span> Loading…';
 
   try {
     const resp = await fetch('/api/analyze');
@@ -275,7 +277,8 @@ async function loadData() {
       status.className = 'error';
       status.textContent = 'Error: ' + data.error;
     } else {
-      status.textContent = `Loaded ${data.results.length} fights · ${new Date().toLocaleTimeString()}`;
+      const with_odds = data.results.filter(r => r.kalshi_f1_prob !== null).length;
+      status.textContent = `${data.results.length} fights · ${with_odds} with live odds · ${new Date().toLocaleTimeString()}`;
       renderResults(data);
     }
   } catch (e) {

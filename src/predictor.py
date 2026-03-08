@@ -92,12 +92,14 @@ def analyze_card(
         bet_on = None
         bet_edge = None
 
+        kalshi_volume = None
         if f1_market or f2_market:
             if f1_market:
                 kalshi_ticker = f1_market.get("ticker")
                 f1_odds = kalshi_client.get_market_odds(kalshi_ticker)
                 if f1_odds:
                     kalshi_f1_prob = f1_odds.get("implied_prob_yes")
+                    kalshi_volume = f1_odds.get("volume")
 
             if f2_market:
                 if not kalshi_ticker:
@@ -105,6 +107,8 @@ def analyze_card(
                 f2_odds = kalshi_client.get_market_odds(f2_market.get("ticker"))
                 if f2_odds:
                     kalshi_f2_prob = f2_odds.get("implied_prob_yes")
+                    if kalshi_volume is None:
+                        kalshi_volume = f2_odds.get("volume")
 
             if kalshi_f1_prob is not None and kalshi_f2_prob is not None:
                 f1_edge = model_f1_prob - kalshi_f1_prob
@@ -131,6 +135,7 @@ def analyze_card(
             "model_f1_prob": model_f1_prob,
             "model_f2_prob": model_f2_prob,
             "predicted_winner": predicted_winner,
+            "kalshi_volume": kalshi_volume,
             "confidence": confidence,
             "kalshi_ticker": kalshi_ticker,
             "kalshi_f1_prob": kalshi_f1_prob,
