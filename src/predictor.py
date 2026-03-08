@@ -81,8 +81,8 @@ def analyze_card(
             predicted_winner = "Unknown"
             confidence = 0.5
 
-        # Kalshi market lookup
-        market = kalshi_client.match_fighters_to_market(f1_name, f2_name, ufc_markets)
+        # Kalshi market lookup — separate market per fighter ("Will X win...")
+        f1_market, f2_market = kalshi_client.match_fight_markets(f1_name, f2_name, ufc_markets)
         kalshi_ticker = None
         kalshi_f1_prob = None
         kalshi_f2_prob = None
@@ -92,43 +92,36 @@ def analyze_card(
         bet_on = None
         bet_edge = None
 
-        if market:
-            ticker = market.get("ticker")
-            kalshi_ticker = ticker
-            odds = kalshi_client.get_market_odds(ticker) if ticker else None
+        if f1_market or f2_market:
+            if f1_market:
+                kalshi_ticker = f1_market.get("ticker")
+                f1_odds = kalshi_client.get_market_odds(kalshi_ticker)
+                if f1_odds:
+                    kalshi_f1_prob = f1_odds.get("implied_prob_yes")
 
-            if odds and odds.get("implied_prob_yes") is not None:
-                parsed = market.get("parsed_fighters")
-                if parsed:
-                    # Determine which fighter is the "yes" side
-                    yes_fighter_name, no_fighter_name = parsed
-                    yes_is_f1 = _names_match(yes_fighter_name, f1_name)
+            if f2_market:
+                if not kalshi_ticker:
+                    kalshi_ticker = f2_market.get("ticker")
+                f2_odds = kalshi_client.get_market_odds(f2_market.get("ticker"))
+                if f2_odds:
+                    kalshi_f2_prob = f2_odds.get("implied_prob_yes")
 
-                    if yes_is_f1:
-                        kalshi_f1_prob = odds["implied_prob_yes"]
-                        kalshi_f2_prob = odds["implied_prob_no"]
-                    else:
-                        kalshi_f1_prob = odds["implied_prob_no"]
-                        kalshi_f2_prob = odds["implied_prob_yes"]
+            if kalshi_f1_prob is not None and kalshi_f2_prob is not None:
+                f1_edge = model_f1_prob - kalshi_f1_prob
+                f2_edge = model_f2_prob - kalshi_f2_prob
+
+                if f1_edge >= VALUE_BET_THRESHOLD:
+                    bet_recommendation = f"BET {f1_name}"
+                    bet_on = f1_name
+                    bet_edge = f1_edge
+                elif f2_edge >= VALUE_BET_THRESHOLD:
+                    bet_recommendation = f"BET {f2_name}"
+                    bet_on = f2_name
+                    bet_edge = f2_edge
                 else:
-                    # Assume yes=fighter1 if we can't parse
-                    kalshi_f1_prob = odds["implied_prob_yes"]
-                    kalshi_f2_prob = odds["implied_prob_no"]
-
-                if kalshi_f1_prob is not None and kalshi_f2_prob is not None:
-                    f1_edge = model_f1_prob - kalshi_f1_prob
-                    f2_edge = model_f2_prob - kalshi_f2_prob
-
-                    if f1_edge >= VALUE_BET_THRESHOLD:
-                        bet_recommendation = f"BET {f1_name}"
-                        bet_on = f1_name
-                        bet_edge = f1_edge
-                    elif f2_edge >= VALUE_BET_THRESHOLD:
-                        bet_recommendation = f"BET {f2_name}"
-                        bet_on = f2_name
-                        bet_edge = f2_edge
-                    else:
-                        bet_recommendation = "PASS"
+                    bet_recommendation = "PASS"
+            elif kalshi_f1_prob is not None or kalshi_f2_prob is not None:
+                bet_recommendation = "PASS"
 
         results.append({
             "fighter1": f1_name,

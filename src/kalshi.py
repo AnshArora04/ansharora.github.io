@@ -27,6 +27,9 @@ load_dotenv()
 BASE_URL = "https://api.elections.kalshi.com/trade-api/v2"
 UFC_KEYWORDS = ["ufc", "mma", "fight", "fighter", "bout"]
 
+# Kalshi series ticker for UFC fight-winner markets ("Will X win...")
+_UFC_FIGHT_SERIES = "KXUFCFIGHT"
+
 _private_key_cache = None
 
 
@@ -124,22 +127,82 @@ def get_all_markets(status: str = "open", limit: int = 1000) -> list[dict]:
 
 def get_ufc_markets() -> list[dict]:
     """
-    Fetch all open Kalshi markets and filter for UFC/MMA fights.
-    Returns list of market dicts with added 'parsed_fighters' field.
+    Fetch UFC/MMA fight markets from Kalshi.
+
+    Strategy (fastest first):
+    1. Query /events via known UFC series tickers — returns only relevant markets
+    2. Fall back to full market scan, excluding cross-category parlay markets
     """
+    markets = _get_markets_via_ufc_series()
+    if markets:
+        return markets
+    print("[kalshi] No UFC events found via series; falling back to full scan...")
+    return _scan_all_markets_for_ufc()
+
+
+def _get_markets_via_ufc_series() -> list[dict]:
+    """
+    Fetch open events under KXUFCFIGHT series, then collect all their markets.
+    Each market title is "Will {Fighter} win the {F1} vs {F2} fight...".
+    Adds 'parsed_winner_fighter' with the fighter this market's YES resolves for.
+    """
+    try:
+        data = _get("/events", params={"series_ticker": _UFC_FIGHT_SERIES, "status": "open", "limit": 100})
+    except Exception as e:
+        print(f"[kalshi] Could not reach events endpoint: {e}")
+        return []
+
+    events = data.get("events", [])
+    if not events:
+        return []
+
+    print(f"[kalshi] Found {len(events)} open UFC events (series {_UFC_FIGHT_SERIES})")
+    ufc_markets = []
+    for event in events:
+        event_ticker = event.get("event_ticker") or event.get("ticker", "")
+        if not event_ticker:
+            continue
+        for m in _get_markets_for_event(event_ticker):
+            m["parsed_winner_fighter"] = _parse_winner_from_title(m.get("title", ""))
+            m["parsed_fighters"] = _parse_fighters_from_title(
+                m.get("title", "") or m.get("subtitle", "")
+            )
+            ufc_markets.append(m)
+
+    print(f"[kalshi] Found {len(ufc_markets)} UFC fight winner markets.")
+    return ufc_markets
+
+
+def _get_markets_for_event(event_ticker: str) -> list[dict]:
+    try:
+        data = _get("/markets", params={"event_ticker": event_ticker, "status": "open", "limit": 200})
+        return data.get("markets", [])
+    except Exception:
+        return []
+
+
+def _scan_all_markets_for_ufc() -> list[dict]:
+    """Full scan of all open markets, filtering for UFC while excluding cross-category parlays."""
     print("[kalshi] Fetching all open markets (authenticated)...")
     all_markets = get_all_markets()
     print(f"[kalshi] Total open markets: {len(all_markets)}")
 
     ufc_markets = []
     for market in all_markets:
+        ticker = market.get("ticker", "") or ""
+
+        # Cross-category parlay markets (e.g. KXMVECROSSCATEGORY-...) contain UFC fighter
+        # names but are not standalone fight winner markets — skip them
+        if "KXMVECROSSCATEGORY" in ticker:
+            continue
+
+        event_ticker = (market.get("event_ticker", "") or "").lower()
         title = (market.get("title", "") or "").lower()
         subtitle = (market.get("subtitle", "") or "").lower()
-        ticker = (market.get("ticker", "") or "").lower()
-        event_ticker = (market.get("event_ticker", "") or "").lower()
 
-        text = f"{title} {subtitle} {ticker} {event_ticker}"
+        text = f"{event_ticker} {title} {subtitle}"
         if any(kw in text for kw in UFC_KEYWORDS):
+            market["parsed_winner_fighter"] = _parse_winner_from_title(market.get("title", ""))
             market["parsed_fighters"] = _parse_fighters_from_title(
                 market.get("title", "") or market.get("subtitle", "")
             )
@@ -147,6 +210,19 @@ def get_ufc_markets() -> list[dict]:
 
     print(f"[kalshi] Found {len(ufc_markets)} UFC/MMA markets.")
     return ufc_markets
+
+
+def _parse_winner_from_title(title: str) -> Optional[str]:
+    """
+    Extract the fighter from a 'Will X win...' market title.
+    e.g. "Will Max Holloway win the Holloway vs Oliveira fight..." → "Max Holloway"
+    """
+    if not title:
+        return None
+    match = re.match(r"Will (.+?) win\b", title, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    return None
 
 
 def _parse_fighters_from_title(title: str) -> Optional[tuple[str, str]]:
@@ -190,11 +266,12 @@ def get_market_odds(ticker: str) -> Optional[dict]:
     no_ask = _parse_price(market.get("no_ask_dollars"))
     last_price = _parse_price(market.get("last_price_dollars"))
 
-    # Use mid-price as best estimate; fall back to last traded price
+    # Use mid-price as best estimate; fall back to last traded price.
+    # Only use bid/ask mid when at least one side is non-zero (active market).
     yes_mid = None
-    if yes_bid is not None and yes_ask is not None:
+    if yes_bid is not None and yes_ask is not None and (yes_bid > 0 or yes_ask > 0):
         yes_mid = (yes_bid + yes_ask) / 2.0
-    elif last_price is not None:
+    if yes_mid is None and last_price is not None and last_price > 0:
         yes_mid = last_price
 
     return {
@@ -221,41 +298,64 @@ def _parse_price(price_val) -> Optional[float]:
         return None
 
 
-def match_fighters_to_market(
+def match_fight_markets(
     fighter1: str, fighter2: str, ufc_markets: list[dict]
+) -> tuple[Optional[dict], Optional[dict]]:
+    """
+    Find the Kalshi fight-winner markets for both fighters in a matchup.
+
+    With KXUFCFIGHT series each fight has two markets:
+      "Will Fighter1 win..." and "Will Fighter2 win..."
+
+    Returns (market_for_fighter1, market_for_fighter2).
+    Each market's yes_mid is that fighter's implied win probability.
+    """
+    return (
+        _find_fighter_win_market(fighter1, fighter2, ufc_markets),
+        _find_fighter_win_market(fighter2, fighter1, ufc_markets),
+    )
+
+
+def _find_fighter_win_market(
+    target: str, opponent: str, ufc_markets: list[dict]
 ) -> Optional[dict]:
     """
-    Find the best-matching Kalshi market for a fighter matchup.
-    Scores markets by how many name components appear in the title.
-    Requires both fighters' last names to match (score >= 4).
+    Find the market where target fighter is the YES outcome.
+    Prefers markets where parsed_winner_fighter matches target AND
+    the opponent's name also appears (to confirm it's the right fight).
     """
-    f1_lower = fighter1.lower()
-    f2_lower = fighter2.lower()
-    f1_last = f1_lower.split()[-1]
-    f2_last = f2_lower.split()[-1]
+    t_lower = target.lower()
+    t_last = t_lower.split()[-1]
+    o_last = opponent.lower().split()[-1]
 
-    best_match = None
+    best = None
     best_score = 0
 
-    for market in ufc_markets:
-        title = (market.get("title", "") or "").lower()
-        subtitle = (market.get("subtitle", "") or "").lower()
-        text = f"{title} {subtitle}"
+    for m in ufc_markets:
+        winner = (m.get("parsed_winner_fighter") or "").lower()
+        title_lower = (m.get("title", "") or "").lower()
 
-        score = 0
-        if f1_last in text:
-            score += 2
-        if f2_last in text:
-            score += 2
-        if f1_lower in text:
-            score += 1
-        if f2_lower in text:
-            score += 1
+        # Target fighter must appear in the winner field
+        if t_last not in winner and t_lower not in winner:
+            continue
+
+        score = 1  # target is in winner field
+        if t_lower in winner:
+            score += 1  # full name match is stronger
+        if o_last in title_lower:
+            score += 2  # opponent is in the title → right fight
 
         if score > best_score:
             best_score = score
-            best_match = market
+            best = m
 
-    if best_score >= 4:
-        return best_match
-    return None
+    return best if best_score >= 1 else None
+
+
+# Keep for backwards compatibility
+def match_fighters_to_market(
+    fighter1: str, fighter2: str, ufc_markets: list[dict]
+) -> Optional[dict]:
+    """Deprecated: use match_fight_markets instead."""
+    f1_market, _ = match_fight_markets(fighter1, fighter2, ufc_markets)
+    return f1_market

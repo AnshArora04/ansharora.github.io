@@ -86,7 +86,7 @@ def build_training_data(fights_df: pd.DataFrame, fighters_df: pd.DataFrame) -> t
     Build X, y from fight history + fighter stats.
     For each fight, create two rows (both orderings) with label 1=fighter1 wins.
     """
-    fighter_lookup = fighters_df.set_index("name").to_dict("index")
+    fighter_lookup = fighters_df.drop_duplicates(subset="name", keep="last").set_index("name").to_dict("index")
 
     X_rows, y_rows = [], []
 

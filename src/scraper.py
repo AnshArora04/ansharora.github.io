@@ -181,10 +181,10 @@ def scrape_fight_history() -> pd.DataFrame:
     all_fights = []
 
     soup = get_soup(f"{BASE_URL}/statistics/events/completed?page=all")
-    event_links = [
-        a["href"] for a in soup.select("tr.b-statistics__table-row a")
-        if a.get("href", "").startswith("http://ufcstats.com/event-details/")
-    ]
+    event_links = list(dict.fromkeys([
+        a["href"] for a in soup.find_all("a", href=True)
+        if "event-details" in a["href"]
+    ]))
 
     print(f"[scraper] Found {len(event_links)} completed events.")
 
