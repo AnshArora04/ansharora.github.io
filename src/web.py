@@ -313,7 +313,11 @@ def analyze():
         if not fights:
             return jsonify({"results": [], "message": "No upcoming fights found"})
 
-        ufc_markets = kalshi_client.get_ufc_markets()
+        try:
+            ufc_markets = kalshi_client.get_ufc_markets()
+        except Exception as kalshi_err:
+            print(f"[web] Kalshi unavailable: {kalshi_err}")
+            ufc_markets = []
         results = pred_module.analyze_card(fights, fighters_df, model, ufc_markets)
         return jsonify({"results": results})
     except Exception as e:
