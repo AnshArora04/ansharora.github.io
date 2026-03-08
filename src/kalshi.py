@@ -1,12 +1,12 @@
 """
 Kalshi API client — fetches UFC prediction markets and odds.
 
-Auth: RSA-SHA256 signed requests
+Auth: RSA-PSS signed requests
   Headers: KALSHI-ACCESS-KEY, KALSHI-ACCESS-TIMESTAMP, KALSHI-ACCESS-SIGNATURE
-  Signature: base64( RSA_SHA256_PKCS1v15( timestamp_ms_str + METHOD + /path ) )
+  Signature: base64( RSA_PSS( SHA256, MGF1(SHA256), salt=DIGEST_LENGTH )( timestamp_ms_str + METHOD + /path ) )
 
-Docs: https://docs.kalshi.com/api-reference/market/get-markets
-Base URL: https://api.elections.kalshi.com/trade-api/v2
+Docs: https://docs.kalshi.com/getting_started/api_keys
+Base URL: https://trading-api.kalshi.com/trade-api/v2
 """
 
 import os
@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 load_dotenv()
 
-BASE_URL = "https://api.elections.kalshi.com/trade-api/v2"
+BASE_URL = "https://trading-api.kalshi.com/trade-api/v2"
 UFC_KEYWORDS = ["ufc", "mma", "fight", "fighter", "bout"]
 
 # Kalshi series ticker for UFC fight-winner markets ("Will X win...")
@@ -67,7 +67,11 @@ def _sign_request(method: str, path: str) -> dict:
     message = (timestamp_ms + method.upper() + path).encode("utf-8")
 
     private_key = _load_private_key()
-    signature_bytes = private_key.sign(message, padding.PKCS1v15(), hashes.SHA256())
+    signature_bytes = private_key.sign(
+        message,
+        padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.DIGEST_LENGTH),
+        hashes.SHA256(),
+    )
     signature_b64 = base64.b64encode(signature_bytes).decode("utf-8")
 
     return {

@@ -66,7 +66,7 @@ except Exception as e:
     sys.exit(1)
 
 # ── Step 3: Sign a test request ───────────────────────────────────
-step(3, "Generate RSA-SHA256 signature")
+step(3, "Generate RSA-PSS signature")
 
 try:
     from cryptography.hazmat.primitives import hashes
@@ -76,7 +76,11 @@ try:
     timestamp_ms = str(int(time.time() * 1000))
     message = (timestamp_ms + "GET" + test_path).encode("utf-8")
 
-    sig_bytes = private_key.sign(message, asym_padding.PKCS1v15(), hashes.SHA256())
+    sig_bytes = private_key.sign(
+        message,
+        asym_padding.PSS(mgf=asym_padding.MGF1(hashes.SHA256()), salt_length=asym_padding.PSS.DIGEST_LENGTH),
+        hashes.SHA256(),
+    )
     sig_b64 = base64.b64encode(sig_bytes).decode("utf-8")
 
     print(f"{OK} Signature generated (length: {len(sig_b64)} chars)")
