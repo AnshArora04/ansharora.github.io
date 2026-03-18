@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Imposter Word Game</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0f0f1a;
+      color: #e0e0f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c084fc;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    /* ── Setup Panel ── */
+    #setup {
+      background: #1a1a2e;
+      border: 1px solid #2d2d4e;
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-bottom: 6px;
+      margin-top: 16px;
+    }
+
+    label:first-of-type { margin-top: 0; }
+
+    select, input[type="number"] {
+      width: 100%;
+      background: #0f0f1a;
+      border: 1px solid #3b3b5e;
+      border-radius: 8px;
+      color: #e0e0f0;
+      padding: 10px 14px;
+      font-size: 1rem;
+      appearance: none;
+    }
+
+    select:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #c084fc;
+    }
+
+    .player-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .player-input {
+      display: flex;
+      gap: 8px;
+    }
+
+    .player-input input[type="text"] {
+      flex: 1;
+      background: #0f0f1a;
+      border: 1px solid #3b3b5e;
+      border-radius: 8px;
+      color: #e0e0f0;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+    }
+
+    .player-input input[type="text"]:focus {
+      outline: none;
+      border-color: #c084fc;
+    }
+
+    .btn-icon {
+      background: #3b1f5e;
+      border: none;
+      border-radius: 8px;
+      color: #c084fc;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 8px 12px;
+      transition: background 0.2s;
+    }
+
+    .btn-icon:hover { background: #4d2a7a; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 12px;
+      background: #7c3aed;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover { background: #6d28d9; }
+    .btn:active { transform: scale(0.98); }
+
+    .btn.secondary {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #d1d5db;
+    }
+
+    .btn.secondary:hover { background: #374151; }
+
+    /* ── Word Reveal ── */
+    #reveal {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .reveal-step {
+      background: #1a1a2e;
+      border: 1px solid #2d2d4e;
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+    }
+
+    .reveal-step h2 {
+      font-size: 1.3rem;
+      color: #a78bfa;
+      margin-bottom: 20px;
+    }
+
+    .word-card {
+      background: #0f0f1a;
+      border: 2px solid #7c3aed;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+      display: none;
+    }
+
+    .word-card .word-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .word-card .word-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f0f0ff;
+    }
+
+    .word-card .hint-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #6b7280;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+
+    .word-card .hint-value {
+      font-size: 1rem;
+      color: #a78bfa;
+      font-style: italic;
+    }
+
+    /* ── Voting ── */
+    #voting {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .vote-panel {
+      background: #1a1a2e;
+      border: 1px solid #2d2d4e;
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .vote-panel h2 {
+      font-size: 1.3rem;
+      color: #a78bfa;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .vote-panel p {
+      font-size: 0.85rem;
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .vote-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .vote-btn {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 12px 18px;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .vote-btn:hover { border-color: #c084fc; background: #1f1f3a; }
+    .vote-btn.selected { border-color: #7c3aed; background: #2e1065; color: #fff; }
+
+    /* ── Result ── */
+    #result {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .result-panel {
+      background: #1a1a2e;
+      border: 1px solid #2d2d4e;
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+    }
+
+    .result-icon { font-size: 4rem; margin-bottom: 12px; }
+
+    .result-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .win .result-title { color: #4ade80; }
+    .lose .result-title { color: #f87171; }
+
+    .result-detail {
+      font-size: 0.95rem;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .result-word {
+      margin-top: 20px;
+      background: #0f0f1a;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .result-word span {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .result-word strong {
+      font-size: 1.4rem;
+      color: #f0f0ff;
+    }
+
+    .result-word .imposter-word {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #2d2d4e;
+    }
+
+    .result-word .imposter-word span { color: #f87171; }
+    .result-word .imposter-word strong { color: #fca5a5; }
+
+    /* ── Progress dots ── */
+    .progress {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #2d2d4e;
+    }
+
+    .dot.done { background: #7c3aed; }
+    .dot.current { background: #c084fc; }
+
+    /* ── Category badge ── */
+    .category-badge {
+      display: inline-block;
+      background: #1e1b4b;
+      border: 1px solid #3730a3;
+      border-radius: 20px;
+      color: #a5b4fc;
+      font-size: 0.75rem;
+      padding: 3px 12px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Imposter</h1>
+<p class="subtitle">Find the odd one out</p>
+
+<!-- ── SETUP ── -->
+<div id="setup">
+  <label>Category</label>
+  <select id="categorySelect">
+    <option value="random">Random</option>
+    <option value="animals">Animals</option>
+    <option value="food">Food</option>
+    <option value="places">Places</option>
+    <option value="sports">Sports</option>
+    <option value="movies">Movies</option>
+    <option value="tech">Technology</option>
+  </select>
+
+  <label>Players (3 minimum)</label>
+  <div class="player-list" id="playerList"></div>
+  <button class="btn-icon" id="addPlayerBtn" style="margin-top:10px;width:100%;">+ Add Player</button>
+
+  <button class="btn" id="startBtn">Start Game</button>
+</div>
+
+<!-- ── REVEAL ── -->
+<div id="reveal">
+  <div class="reveal-step" id="revealStep">
+    <h2 id="revealName">Player Name</h2>
+    <p style="color:#6b7280;font-size:0.85rem;margin-bottom:16px;">Tap the card to see your word, then hide it.</p>
+
+    <div class="progress" id="revealProgress"></div>
+
+    <div class="word-card" id="wordCard">
+      <div class="word-label">Your Word</div>
+      <div class="word-value" id="wordValue">—</div>
+      <div class="hint-label">Hint</div>
+      <div class="hint-value" id="hintValue">—</div>
+    </div>
+
+    <button class="btn" id="showWordBtn">Show My Word</button>
+    <button class="btn secondary" id="nextPlayerBtn" style="display:none;margin-top:10px;">Done — Next Player</button>
+  </div>
+</div>
+
+<!-- ── VOTING ── -->
+<div id="voting">
+  <div class="vote-panel">
+    <h2>Who is the Imposter?</h2>
+    <p>Discuss, then vote. One player got a different word!</p>
+    <div class="vote-options" id="voteOptions"></div>
+    <button class="btn" id="revealResultBtn" style="margin-top:20px;display:none;">Reveal Result</button>
+  </div>
+</div>
+
+<!-- ── RESULT ── -->
+<div id="result">
+  <div class="result-panel" id="resultPanel">
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-detail" id="resultDetail"></div>
+    <div class="result-word" id="resultWords"></div>
+    <button class="btn" style="margin-top:24px;" onclick="resetGame()">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ── Word bank ──
+const WORDS = {
+  animals: [
+    { real: "Elephant", fake: "Hippo",    hint: "Largest land animal" },
+    { real: "Penguin",  fake: "Puffin",   hint: "Lives on ice" },
+    { real: "Tiger",    fake: "Leopard",  hint: "Has stripes" },
+    { real: "Dolphin",  fake: "Porpoise", hint: "Marine mammal" },
+    { real: "Eagle",    fake: "Hawk",     hint: "National bird of the US" },
+  ],
+  food: [
+    { real: "Pizza",    fake: "Flatbread", hint: "Has tomato sauce & cheese" },
+    { real: "Sushi",    fake: "Sashimi",   hint: "Japanese rice roll" },
+    { real: "Burger",   fake: "Sandwich",  hint: "Has a beef patty" },
+    { real: "Pasta",    fake: "Noodles",   hint: "Italian staple" },
+    { real: "Donut",    fake: "Bagel",     hint: "Sweet fried ring" },
+  ],
+  places: [
+    { real: "Paris",    fake: "Lyon",      hint: "Has the Eiffel Tower" },
+    { real: "Tokyo",    fake: "Osaka",     hint: "Japan's capital" },
+    { real: "NewYork",  fake: "Chicago",   hint: "Home of Times Square" },
+    { real: "Sydney",   fake: "Melbourne", hint: "Has the Opera House" },
+    { real: "Rome",     fake: "Milan",     hint: "Has the Colosseum" },
+  ],
+  sports: [
+    { real: "Football",  fake: "Rugby",    hint: "Most popular sport globally" },
+    { real: "Basketball",fake: "Handball", hint: "NBA sport" },
+    { real: "Tennis",    fake: "Squash",   hint: "Wimbledon sport" },
+    { real: "Baseball",  fake: "Cricket",  hint: "America's pastime" },
+    { real: "Swimming",  fake: "Diving",   hint: "Michael Phelps sport" },
+  ],
+  movies: [
+    { real: "Titanic",   fake: "Poseidon", hint: "Jack & Rose" },
+    { real: "Inception", fake: "Tenet",    hint: "Dream heist" },
+    { real: "Avatar",    fake: "Dune",     hint: "Blue aliens on Pandora" },
+    { real: "Joker",     fake: "Batman",   hint: "Joaquin Phoenix villain" },
+    { real: "Frozen",    fake: "Moana",    hint: "Let it go" },
+  ],
+  tech: [
+    { real: "iPhone",    fake: "Samsung",  hint: "Apple's flagship phone" },
+    { real: "Google",    fake: "Bing",     hint: "World's most used search engine" },
+    { real: "Tesla",     fake: "Rivian",   hint: "Elon Musk's EV brand" },
+    { real: "Minecraft", fake: "Roblox",   hint: "Blocky sandbox game by Mojang" },
+    { real: "Netflix",   fake: "Hulu",     hint: "Original content streaming giant" },
+  ],
+};
+
+// ── State ──
+let players = [];
+let imposterIndex = -1;
+let chosenWord = null;
+let currentReveal = 0;
+let selectedVote = null;
+
+// ── Init ──
+(function init() {
+  const list = document.getElementById('playerList');
+  ['Player 1', 'Player 2', 'Player 3'].forEach(n => addPlayerField(n));
+  document.getElementById('addPlayerBtn').addEventListener('click', () => addPlayerField('Player ' + (list.children.length + 1)));
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('showWordBtn').addEventListener('click', showWord);
+  document.getElementById('nextPlayerBtn').addEventListener('click', nextPlayer);
+  document.getElementById('revealResultBtn').addEventListener('click', revealResult);
+})();
+
+function addPlayerField(placeholder) {
+  const list = document.getElementById('playerList');
+  const row = document.createElement('div');
+  row.className = 'player-input';
+  row.innerHTML = `
+    <input type="text" placeholder="${placeholder}" value="${placeholder}" />
+    <button class="btn-icon" title="Remove">✕</button>
+  `;
+  row.querySelector('button').addEventListener('click', () => {
+    if (list.children.length > 3) row.remove();
+  });
+  list.appendChild(row);
+}
+
+function getPlayerNames() {
+  return Array.from(document.querySelectorAll('.player-input input'))
+    .map(i => i.value.trim() || i.placeholder);
+}
+
+function pickWord(category) {
+  const cats = category === 'random' ? Object.keys(WORDS) : [category];
+  const cat = cats[Math.floor(Math.random() * cats.length)];
+  const pool = WORDS[cat];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function startGame() {
+  players = getPlayerNames();
+  if (players.length < 3) { alert('Need at least 3 players!'); return; }
+
+  const category = document.getElementById('categorySelect').value;
+  chosenWord = pickWord(category);
+  imposterIndex = Math.floor(Math.random() * players.length);
+  currentReveal = 0;
+  selectedVote = null;
+
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('reveal').style.display = 'block';
+  buildProgress();
+  showRevealStep();
+}
+
+function buildProgress() {
+  const prog = document.getElementById('revealProgress');
+  prog.innerHTML = '';
+  players.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' current' : '');
+    prog.appendChild(d);
+  });
+}
+
+function updateProgress() {
+  const dots = document.querySelectorAll('#revealProgress .dot');
+  dots.forEach((d, i) => {
+    d.className = 'dot' + (i < currentReveal ? ' done' : i === currentReveal ? ' current' : '');
+  });
+}
+
+function showRevealStep() {
+  document.getElementById('revealName').textContent = players[currentReveal] + "'s turn";
+  document.getElementById('wordCard').style.display = 'none';
+  document.getElementById('showWordBtn').style.display = 'block';
+  document.getElementById('nextPlayerBtn').style.display = 'none';
+  updateProgress();
+}
+
+function showWord() {
+  const isImposter = currentReveal === imposterIndex;
+  document.getElementById('wordValue').textContent = isImposter ? chosenWord.fake : chosenWord.real;
+  document.getElementById('hintValue').textContent = chosenWord.hint;
+  document.getElementById('wordCard').style.display = 'block';
+  document.getElementById('showWordBtn').style.display = 'none';
+  document.getElementById('nextPlayerBtn').style.display = 'block';
+  document.getElementById('nextPlayerBtn').textContent =
+    currentReveal < players.length - 1 ? 'Done — Next Player' : 'Done — Start Voting';
+}
+
+function nextPlayer() {
+  currentReveal++;
+  if (currentReveal < players.length) {
+    showRevealStep();
+  } else {
+    startVoting();
+  }
+}
+
+function startVoting() {
+  document.getElementById('reveal').style.display = 'none';
+  document.getElementById('voting').style.display = 'block';
+
+  const opts = document.getElementById('voteOptions');
+  opts.innerHTML = '';
+  players.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'vote-btn';
+    btn.textContent = p;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedVote = i;
+      document.getElementById('revealResultBtn').style.display = 'block';
+    });
+    opts.appendChild(btn);
+  });
+}
+
+function revealResult() {
+  if (selectedVote === null) return;
+
+  document.getElementById('voting').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+
+  const panel = document.getElementById('resultPanel');
+  const correct = selectedVote === imposterIndex;
+
+  panel.className = 'result-panel ' + (correct ? 'win' : 'lose');
+  document.getElementById('resultIcon').textContent = correct ? '🎉' : '😈';
+  document.getElementById('resultTitle').textContent = correct ? 'Imposter Found!' : 'Imposter Wins!';
+  document.getElementById('resultDetail').textContent = correct
+    ? `You correctly identified ${players[imposterIndex]} as the imposter!`
+    : `Wrong! ${players[imposterIndex]} was the imposter and got away!`;
+
+  document.getElementById('resultWords').innerHTML = `
+    <span>Real Word</span>
+    <strong>${chosenWord.real}</strong>
+    <div class="imposter-word">
+      <span>Imposter's Word</span>
+      <strong>${chosenWord.fake}</strong>
+    </div>
+  `;
+}
+
+function resetGame() {
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('setup').style.display = 'block';
+}
+</script>
+</body>
+</html>
